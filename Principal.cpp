@@ -79,80 +79,73 @@ void blancos(){
 
 int main()
 {
-    // img = imread("corpus/TRAIN/Circle/Circle_0579363e-2a92-11ea-8123-8363a7ec19e6.png");
-    // img = imread("/home/bryepz/Documents/VISION/Practica3_1/corpus/TRAIN/Heptagon/Heptagon_058d2c68-2a9a-11ea-8123-8363a7ec19e6.png");
-    img = imread("corpus/TRAIN/Heptagon/Heptagon_02d59c90-2a94-11ea-8123-8363a7ec19e6.png");
     namedWindow("fotoTr", WINDOW_AUTOSIZE);
-    namedWindow("copia", WINDOW_AUTOSIZE);
-    namedWindow("foto", WINDOW_AUTOSIZE);   
     String entrenamiento = "corpus/TRAIN";
     String path[1700];
-
-    // ifstream contenido("./csv_train.csv", ios::in);
-    // String linea;
-    // String con = "";
-    // while (getline(contenido, linea))
-    // {
-    //     con = con + linea + "\n";
-    // }
+    String salida;
 
     ofstream contenido2("./csv_train.csv", ios::out);
-    contenido2 << "" << "momento1," << "momento2," << "momento2," << "momento3," << "momento4,"
+    contenido2 << "" << "momento1," << "momento2," << "momento3," << "momento4,"
             << "momento5," << "momento6," << "momento7," << "distancia," << "poligono"<< endl;
     contenido2.close();
 
-    // for(const fs::directory_entry& dir_entry : fs::directory_iterator(entrenamiento)){
-    //     cout << dir_entry.path().string().substr(13,dir_entry.path().string().length()-1) << endl;
-    //     for(const fs::directory_entry& dir_entry : fs::recursive_directory_iterator(dir_entry.path().string())){
-    //         cout << dir_entry.path().string() << endl;
-    //         img = imread(dir_entry.path().string(), IMREAD_COLOR);
-    //         cv::imshow("foto", img);
-            
-    //     }
-    //     // cout << ":::::::::::::::::::::::::" <<endl;
-    //     // path[cont] = dir_entry.path().string();
-    //     // cont++;
-    // }
+    for(const fs::directory_entry& dir_entry : fs::directory_iterator(entrenamiento)){
+        salida = dir_entry.path().string().substr(13,dir_entry.path().string().length()-1);
+
+        for(const fs::directory_entry& dir_entry : fs::recursive_directory_iterator(dir_entry.path().string())){
+            img = imread(dir_entry.path().string(), IMREAD_COLOR);
+
+            //ii        
+            cv::cvtColor(img, img, COLOR_BGR2GRAY);
+            copia = img.clone();
+            pintarPoligono();
+            if(umbralInt > umbralExt){
+                cv::threshold(copia, imgTr, umbralExt, 255, THRESH_BINARY_INV);
+            }else{
+                cv::threshold(copia, imgTr, umbralInt, 255, THRESH_BINARY);
+            }
+            blancos();
+            if(contBlancos > contNegros){
+                cv::bitwise_not(imgTr, imgTr);
+            }
+            Moments moment = moments(imgTr, true);
+            HuMoments(moment, momentsHu);
+
+            ifstream contenido("./csv_train.csv", ios::in);
+            String linea;
+            String con = "";
+            while (getline(contenido, linea))
+            {
+                con = con + linea + "\n";
+            }
+
+            ofstream contenido2("./csv_train.csv", ios::out);
+            contenido2 << con;
+            for (int i = 0; i < 7; i++)
+            {
+                contenido2 << momentsHu[i] << ",";
+                cout << momentsHu[i] << ",";
+            }
+
+            double d = 0.0;
+            for (int i = 0; i < 7; i++)
+            {
+                d+=pow(momentsHu[i],2);
+            }
+            d = sqrt(d);
+            contenido2 << d << ",";
+            cout << d << ",";
+            contenido2 << salida << endl;
+            cout << salida << endl;
+            contenido2.close();
+
+            cv::imshow("fotoTr", imgTr);
+            destroyAllWindows();    
+        }
+    }
 
 
-    // img = imread(dir_entry.path().filename(), IMREAD_COLOR);
-    cv::cvtColor(img, img, COLOR_BGR2GRAY);
-    copia = img.clone();
-    // cv::Laplacian(img, img, -1, CV_16S);
-    pintarPoligono();
-    if(umbralInt > umbralExt){
-        cv::threshold(copia, imgTr, umbralExt, 255, THRESH_BINARY_INV);
-    }else{
-        cv::threshold(copia, imgTr, umbralInt, 255, THRESH_BINARY_INV);
-    }
-    blancos();
-    // cout << " blanc " << umbralExt << " ::: Negrtos " << umbralInt << endl;
-
-    if(contBlancos > contNegros){
-        cv::bitwise_not(imgTr, imgTr);
-    }
-    Moments moment = moments(imgTr, true);
-    HuMoments(moment, momentsHu);
-    for (int i = 0; i < 7; i++)
-    {
-        cout << momentsHu[i] << endl;
-    }
     
-    // cout << " blanc " << contBlancos << " ::: Negrtos " << contNegros << endl;
-
-    double d = 0.0;
-    for (int i = 0; i < 7; i++)
-    {
-        d+=pow(momentsHu[i],2);
-    }
-    d = sqrt(d);
-    cout << "d_euq > " << d << endl;
-    
-    cv::imshow("foto", img);
-    cv::imshow("fotoTr", imgTr);
-    cv::imshow("copia", copia);
-    waitKey(0);
-    destroyAllWindows();
 
 
     return 0;
